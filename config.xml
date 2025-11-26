@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.citizenreport.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Citizen Report</name>
+    <description>
+        A citizen reporting app for incidents and emergencies
+    </description>
+    <author email="dev@citizenreport.com" href="https://citizenreport.com">
+        Citizen Report Team
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <icon density="ldpi" src="www/img/icon-ldpi.png" />
+        <icon density="mdpi" src="www/img/icon-mdpi.png" />
+        <icon density="hdpi" src="www/img/icon-hdpi.png" />
+        <icon density="xhdpi" src="www/img/icon-xhdpi.png" />
+        <icon density="xxhdpi" src="www/img/icon-xxhdpi.png" />
+        <icon density="xxxhdpi" src="www/img/icon-xxxhdpi.png" />
+        
+        <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+        <preference name="android-minSdkVersion" value="22" />
+        <preference name="android-targetSdkVersion" value="33" />
+    </platform>
+    
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#2196F3" />
+    <preference name="StatusBarStyle" value="lightcontent" />
+    
+    <!-- Plugins -->
+    <plugin name="cordova-plugin-camera" spec="^6.0.0" />
+    <plugin name="cordova-plugin-geolocation" spec="^4.1.0" />
+    <plugin name="cordova-plugin-file" spec="^7.0.0" />
+    <plugin name="cordova-plugin-file-transfer" spec="^1.7.1" />
+    <plugin name="cordova-plugin-network-information" spec="^3.0.0" />
+    <plugin name="cordova-plugin-statusbar" spec="^3.0.0" />
+    <plugin name="cordova-plugin-whitelist" spec="^1.3.5" />
+    <plugin name="cordova-plugin-inappbrowser" spec="^5.0.0" />
+    <plugin name="cordova-plugin-dialogs" spec="^2.0.2" />
+    <plugin name="cordova-plugin-splashscreen" spec="^6.0.0" />
+    <plugin name="phonegap-plugin-push" spec="^2.3.0">
+        <variable name="FCM_VERSION" value="11.0.1" />
+    </plugin>
+</widget>
