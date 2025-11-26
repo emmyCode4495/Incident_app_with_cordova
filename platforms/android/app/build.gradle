@@ -109,6 +109,8 @@ ext {
 }
 
 // PLUGIN GRADLE EXTENSIONS START
+apply from: "../cordova-support-google-services/app-build.gradle"
+apply from: "../phonegap-plugin-multidex/app-multidex.gradle"
 // PLUGIN GRADLE EXTENSIONS END
 
 def hasBuildExtras1 = file('build-extras.gradle').exists()
@@ -179,11 +181,9 @@ task cdvPrintProps {
 }
 
 android {
-    namespace cordovaConfig.PACKAGE_NAMESPACE
-
     defaultConfig {
         versionCode cdvVersionCode ?: new BigInteger("" + privateHelpers.extractIntFromManifest("versionCode"))
-        applicationId cordovaConfig.PACKAGE_NAMESPACE
+        applicationId privateHelpers.extractStringFromManifest("package")
 
         minSdkVersion cordovaConfig.MIN_SDK_VERSION
         if (cordovaConfig.MAX_SDK_VERSION != null) {
@@ -297,6 +297,11 @@ dependencies {
 
     // SUB-PROJECT DEPENDENCIES START
     implementation(project(path: ":CordovaLib"))
+    implementation "androidx.core:core:1.6.+"
+    implementation "androidx.webkit:webkit:1.4.0"
+    implementation "com.android.support:support-v13:27.+"
+    implementation "me.leolin:ShortcutBadger:1.1.17@aar"
+    implementation "com.google.firebase:firebase-messaging:17.0.+"
     // SUB-PROJECT DEPENDENCIES END
 }
 

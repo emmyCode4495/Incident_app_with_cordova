@@ -4,8 +4,7 @@
  */
 
 // IMPORTANT: Replace with your WordPress site URL
-const API_BASE_URL = 'https://your-wordpress-site.com/wp-json';
-
+const API_BASE_URL = 'http://citizenreport.rf.gd/wp-json';
 const Auth = {
     currentUser: null,
     authToken: null,
