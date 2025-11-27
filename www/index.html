@@ -12,7 +12,8 @@
     <div id="splash-screen" class="splash">
         <div class="splash-content">
             <h1>🚨 Citizen Report</h1>
-            <p>Loading...</p>
+            <p id="splash-message">Initializing...</p>
+            <p id="splash-debug" style="font-size: 12px; margin-top: 20px;"></p>
         </div>
     </div>
 
@@ -239,8 +240,13 @@
 
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts - Load in specific order -->
     <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript">
+        // Debug: Check if Cordova loaded
+        console.log('Cordova available:', typeof cordova !== 'undefined');
+        console.log('Device info:', typeof device !== 'undefined' ? device : 'Not available');
+    </script>
     <script type="text/javascript" src="js/storage.js"></script>
     <script type="text/javascript" src="js/auth.js"></script>
     <script type="text/javascript" src="js/incidents.js"></script>

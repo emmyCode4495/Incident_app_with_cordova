@@ -1,99 +1,179 @@
 /**
- * Main Application Module
+ * Main Application Module - FIXED VERSION
  * Coordinates all app functionality
  */
 
 const App = {
+    deviceReadyFired: false,
+    
     // Initialize app
     init: function() {
-        document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+        console.log('App.init called');
+        this.updateSplash('Initializing app...');
+        
+        // Check if Cordova is available
+        if (typeof cordova === 'undefined') {
+            console.log('Cordova not detected, using browser mode');
+            this.updateSplash('Running in browser mode');
+            setTimeout(() => {
+                this.onDeviceReady();
+            }, 1000);
+        } else {
+            console.log('Cordova detected, waiting for deviceready');
+            this.updateSplash('Loading Cordova...');
+            
+            // Set up deviceready listener
+            document.addEventListener('deviceready', () => {
+                console.log('deviceready event fired');
+                this.deviceReadyFired = true;
+                this.onDeviceReady();
+            }, false);
+            
+            // Fallback timeout (if deviceready doesn't fire in 5 seconds)
+            setTimeout(() => {
+                if (!this.deviceReadyFired) {
+                    console.warn('deviceready timeout, forcing launch');
+                    this.updateSplash('Timeout - forcing launch...');
+                    this.onDeviceReady();
+                }
+            }, 5000);
+        }
+    },
+
+    // Update splash screen message
+    updateSplash: function(message) {
+        const splashMsg = document.getElementById('splash-message');
+        const splashDebug = document.getElementById('splash-debug');
+        if (splashMsg) {
+            splashMsg.textContent = message;
+        }
+        if (splashDebug) {
+            const timestamp = new Date().toLocaleTimeString();
+            splashDebug.textContent = `[${timestamp}] ${message}`;
+        }
+        console.log('Splash:', message);
     },
 
     // Device ready handler
     onDeviceReady: function() {
-        console.log('Device ready');
+        console.log('onDeviceReady called');
+        this.updateSplash('Device ready!');
 
-        // Hide splash screen
+        // Hide splash screen after short delay
         setTimeout(() => {
-            document.getElementById('splash-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-        }, 1500);
+            this.updateSplash('Loading interface...');
+            
+            try {
+                document.getElementById('splash-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                console.log('App UI displayed');
+                
+                // Initialize authentication
+                this.updateSplash('Checking authentication...');
+                const isAuthenticated = Auth.init();
+                console.log('Authentication check:', isAuthenticated);
 
-        // Initialize authentication
-        const isAuthenticated = Auth.init();
+                if (isAuthenticated) {
+                    this.showHomePage();
+                } else {
+                    this.showLoginPage();
+                }
 
-        if (isAuthenticated) {
-            this.showHomePage();
-        } else {
-            this.showLoginPage();
-        }
+                // Setup event listeners
+                this.setupEventListeners();
 
-        // Setup event listeners
-        this.setupEventListeners();
+                // Initialize push notifications (if available)
+                if (typeof PushNotification !== 'undefined') {
+                    this.initPushNotifications();
+                }
 
-        // Initialize push notifications
-        this.initPushNotifications();
-
-        // Handle back button
-        document.addEventListener('backbutton', this.onBackButton.bind(this), false);
+                // Handle back button (if available)
+                if (typeof cordova !== 'undefined') {
+                    document.addEventListener('backbutton', this.onBackButton.bind(this), false);
+                }
+                
+                console.log('App fully initialized');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                alert('Error initializing app: ' + error.message);
+            }
+        }, 1000);
     },
 
     // Setup all event listeners
     setupEventListeners: function() {
-        // Menu
-        document.getElementById('menu-btn').addEventListener('click', this.toggleMenu.bind(this));
-        document.getElementById('close-menu-btn').addEventListener('click', this.toggleMenu.bind(this));
+        console.log('Setting up event listeners');
+        
+        try {
+            // Menu
+            this.addListener('menu-btn', 'click', this.toggleMenu.bind(this));
+            this.addListener('close-menu-btn', 'click', this.toggleMenu.bind(this));
 
-        // Menu items
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = e.target.getAttribute('data-page');
-                if (page) {
-                    this.navigateTo(page);
-                    this.toggleMenu();
-                }
+            // Menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = e.target.getAttribute('data-page');
+                    if (page) {
+                        this.navigateTo(page);
+                        this.toggleMenu();
+                    }
+                });
             });
-        });
 
-        // Logout
-        document.getElementById('logout-btn').addEventListener('click', this.handleLogout.bind(this));
+            // Logout
+            this.addListener('logout-btn', 'click', this.handleLogout.bind(this));
 
-        // Login form
-        document.getElementById('login-form').addEventListener('submit', this.handleLogin.bind(this));
+            // Login form
+            this.addListener('login-form', 'submit', this.handleLogin.bind(this));
 
-        // Add incident button
-        document.getElementById('add-incident-btn').addEventListener('click', this.showAddIncidentModal.bind(this));
+            // Add incident button
+            this.addListener('add-incident-btn', 'click', this.showAddIncidentModal.bind(this));
 
-        // Add incident form
-        document.getElementById('add-incident-form').addEventListener('submit', this.handleAddIncident.bind(this));
+            // Add incident form
+            this.addListener('add-incident-form', 'submit', this.handleAddIncident.bind(this));
 
-        // Modal close buttons
-        document.getElementById('close-modal-btn').addEventListener('click', this.hideAddIncidentModal.bind(this));
-        document.getElementById('cancel-incident-btn').addEventListener('click', this.hideAddIncidentModal.bind(this));
-        document.getElementById('close-detail-btn').addEventListener('click', this.hideIncidentDetail.bind(this));
+            // Modal close buttons
+            this.addListener('close-modal-btn', 'click', this.hideAddIncidentModal.bind(this));
+            this.addListener('cancel-incident-btn', 'click', this.hideAddIncidentModal.bind(this));
+            this.addListener('close-detail-btn', 'click', this.hideIncidentDetail.bind(this));
 
-        // Photo buttons
-        document.getElementById('take-photo-btn').addEventListener('click', this.handleTakePhoto.bind(this));
-        document.getElementById('choose-photo-btn').addEventListener('click', this.handleChoosePhoto.bind(this));
+            // Photo buttons
+            this.addListener('take-photo-btn', 'click', this.handleTakePhoto.bind(this));
+            this.addListener('choose-photo-btn', 'click', this.handleChoosePhoto.bind(this));
 
-        // Location button
-        document.getElementById('get-location-btn').addEventListener('click', this.handleGetLocation.bind(this));
+            // Location button
+            this.addListener('get-location-btn', 'click', this.handleGetLocation.bind(this));
 
-        // Filter and refresh
-        document.getElementById('category-filter').addEventListener('change', this.handleCategoryFilter.bind(this));
-        document.getElementById('refresh-btn').addEventListener('click', this.handleRefresh.bind(this));
+            // Filter and refresh
+            this.addListener('category-filter', 'change', this.handleCategoryFilter.bind(this));
+            this.addListener('refresh-btn', 'click', this.handleRefresh.bind(this));
 
-        // Load more
-        document.getElementById('load-more-btn').addEventListener('click', this.handleLoadMore.bind(this));
+            // Load more
+            this.addListener('load-more-btn', 'click', this.handleLoadMore.bind(this));
 
-        // Category cards
-        document.querySelectorAll('.category-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                const category = e.currentTarget.getAttribute('data-category');
-                this.filterByCategory(category);
+            // Category cards
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const category = e.currentTarget.getAttribute('data-category');
+                    this.filterByCategory(category);
+                });
             });
-        });
+            
+            console.log('Event listeners setup complete');
+        } catch (error) {
+            console.error('Error setting up event listeners:', error);
+        }
+    },
+    
+    // Helper to safely add event listener
+    addListener: function(id, event, handler) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener(event, handler);
+        } else {
+            console.warn('Element not found:', id);
+        }
     },
 
     // Toggle side menu
@@ -104,6 +184,8 @@ const App = {
 
     // Navigate to page
     navigateTo: function(pageName) {
+        console.log('Navigating to:', pageName);
+        
         // Hide all pages
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
@@ -147,6 +229,8 @@ const App = {
 
     // Load page specific data
     loadPageData: function(pageName) {
+        console.log('Loading page data for:', pageName);
+        
         switch(pageName) {
             case 'home':
                 this.loadIncidents();
@@ -165,12 +249,14 @@ const App = {
 
     // Show login page
     showLoginPage: function() {
+        console.log('Showing login page');
         document.getElementById('login-page').classList.add('active');
         document.getElementById('add-incident-btn').style.display = 'none';
     },
 
     // Show home page
     showHomePage: function() {
+        console.log('Showing home page');
         document.getElementById('login-page').classList.remove('active');
         document.getElementById('add-incident-btn').style.display = 'block';
         this.navigateTo('home');
@@ -179,20 +265,33 @@ const App = {
     // Handle login
     handleLogin: async function(e) {
         e.preventDefault();
+        console.log('Login attempt');
 
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
+        if (!username || !password) {
+            this.showAlert('Error', 'Please enter username and password');
+            return;
+        }
+
         this.showLoading();
 
-        const result = await Auth.login(username, password);
+        try {
+            const result = await Auth.login(username, password);
+            this.hideLoading();
 
-        this.hideLoading();
-
-        if (result.success) {
-            this.showHomePage();
-        } else {
-            this.showAlert('Login Failed', result.message || 'Invalid credentials');
+            if (result.success) {
+                console.log('Login successful');
+                this.showHomePage();
+            } else {
+                console.log('Login failed:', result.message);
+                this.showAlert('Login Failed', result.message || 'Invalid credentials');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            this.hideLoading();
+            this.showAlert('Error', 'Login failed: ' + error.message);
         }
     },
 
@@ -207,34 +306,40 @@ const App = {
 
     // Load incidents
     loadIncidents: async function(page = 1) {
+        console.log('Loading incidents, page:', page);
         const listContainer = document.getElementById('incidents-list');
         
         if (page === 1) {
             listContainer.innerHTML = '<p class="text-center">Loading incidents...</p>';
         }
 
-        const result = await Incidents.fetchIncidents(page, Incidents.currentCategory);
+        try {
+            const result = await Incidents.fetchIncidents(page, Incidents.currentCategory);
 
-        if (result.success) {
-            if (page === 1) {
-                this.renderIncidents(result.data);
+            if (result.success) {
+                if (page === 1) {
+                    this.renderIncidents(result.data);
+                } else {
+                    this.appendIncidents(result.data);
+                }
+
+                // Show/hide load more button
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                if (Incidents.currentPage >= Incidents.totalPages) {
+                    loadMoreBtn.style.display = 'none';
+                } else {
+                    loadMoreBtn.style.display = 'block';
+                }
+
+                if (result.cached) {
+                    this.showAlert('Offline Mode', 'Showing cached incidents');
+                }
             } else {
-                this.appendIncidents(result.data);
+                listContainer.innerHTML = '<p class="text-center">Failed to load incidents. Please try again.</p>';
             }
-
-            // Show/hide load more button
-            const loadMoreBtn = document.getElementById('load-more-btn');
-            if (Incidents.currentPage >= Incidents.totalPages) {
-                loadMoreBtn.style.display = 'none';
-            } else {
-                loadMoreBtn.style.display = 'block';
-            }
-
-            if (result.cached) {
-                this.showAlert('Offline Mode', 'Showing cached incidents');
-            }
-        } else {
-            listContainer.innerHTML = '<p class="text-center">Failed to load incidents. Please try again.</p>';
+        } catch (error) {
+            console.error('Error loading incidents:', error);
+            listContainer.innerHTML = '<p class="text-center">Error loading incidents: ' + error.message + '</p>';
         }
     },
 
@@ -338,40 +443,49 @@ const App = {
         const listContainer = document.getElementById('my-incidents-list');
         listContainer.innerHTML = '<p class="text-center">Loading your incidents...</p>';
 
-        const result = await Incidents.fetchMyIncidents();
+        try {
+            const result = await Incidents.fetchMyIncidents();
 
-        if (result.success) {
-            if (result.data.length === 0) {
-                listContainer.innerHTML = '<p class="text-center">You haven\'t submitted any incidents yet</p>';
-            } else {
-                listContainer.innerHTML = result.data.map(incident => this.createIncidentCard(incident)).join('');
+            if (result.success) {
+                if (result.data.length === 0) {
+                    listContainer.innerHTML = '<p class="text-center">You haven\'t submitted any incidents yet</p>';
+                } else {
+                    listContainer.innerHTML = result.data.map(incident => this.createIncidentCard(incident)).join('');
 
-                // Add click listeners
-                document.querySelectorAll('#my-incidents-list .incident-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const id = card.getAttribute('data-id');
-                        this.showIncidentDetail(result.data.find(i => i.id == id));
+                    // Add click listeners
+                    document.querySelectorAll('#my-incidents-list .incident-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            const id = card.getAttribute('data-id');
+                            this.showIncidentDetail(result.data.find(i => i.id == id));
+                        });
                     });
-                });
+                }
+            } else {
+                listContainer.innerHTML = '<p class="text-center">Failed to load your incidents</p>';
             }
-        } else {
-            listContainer.innerHTML = '<p class="text-center">Failed to load your incidents</p>';
+        } catch (error) {
+            console.error('Error loading my incidents:', error);
+            listContainer.innerHTML = '<p class="text-center">Error: ' + error.message + '</p>';
         }
     },
 
     // Load categories
     loadCategories: async function() {
-        const result = await Incidents.fetchIncidents(1, '');
-        
-        if (result.success) {
-            const counts = Incidents.countByCategory(result.data);
+        try {
+            const result = await Incidents.fetchIncidents(1, '');
             
-            Object.keys(counts).forEach(category => {
-                const countEl = document.getElementById(`count-${category}`);
-                if (countEl) {
-                    countEl.textContent = `${counts[category]} report${counts[category] !== 1 ? 's' : ''}`;
-                }
-            });
+            if (result.success) {
+                const counts = Incidents.countByCategory(result.data);
+                
+                Object.keys(counts).forEach(category => {
+                    const countEl = document.getElementById(`count-${category}`);
+                    if (countEl) {
+                        countEl.textContent = `${counts[category]} report${counts[category] !== 1 ? 's' : ''}`;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
         }
     },
 
@@ -390,10 +504,14 @@ const App = {
 
     // Load user statistics
     loadUserStats: async function() {
-        const result = await Incidents.fetchMyIncidents();
-        
-        if (result.success) {
-            document.getElementById('total-reports').textContent = result.data.length;
+        try {
+            const result = await Incidents.fetchMyIncidents();
+            
+            if (result.success) {
+                document.getElementById('total-reports').textContent = result.data.length;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
         }
     },
 
@@ -480,16 +598,21 @@ const App = {
 
         this.showLoading();
 
-        const result = await Incidents.createIncident(incidentData);
+        try {
+            const result = await Incidents.createIncident(incidentData);
+            this.hideLoading();
 
-        this.hideLoading();
-
-        if (result.success) {
-            this.hideAddIncidentModal();
-            this.showAlert('Success', 'Incident reported successfully');
-            this.loadIncidents(); // Refresh list
-        } else {
-            this.showAlert('Error', result.message || 'Failed to submit incident');
+            if (result.success) {
+                this.hideAddIncidentModal();
+                this.showAlert('Success', 'Incident reported successfully');
+                this.loadIncidents(); // Refresh list
+            } else {
+                this.showAlert('Error', result.message || 'Failed to submit incident');
+            }
+        } catch (error) {
+            this.hideLoading();
+            console.error('Submit error:', error);
+            this.showAlert('Error', 'Failed to submit: ' + error.message);
         }
     },
 
@@ -529,15 +652,73 @@ const App = {
 
     // Show alert
     showAlert: function(title, message) {
-        if (navigator.notification) {
+        if (typeof navigator !== 'undefined' && navigator.notification) {
             navigator.notification.alert(message, null, title, 'OK');
         } else {
-            alert(`${title}\n${message}`);
+            alert(`${title}\n\n${message}`);
         }
     },
 
     // Initialize push notifications
     initPushNotifications: function() {
-        if (window.PushNotification) {
+        if (typeof PushNotification === 'undefined') {
+            console.log('Push notifications not available');
+            return;
+        }
+
+        try {
             const push = PushNotification.init({
-                android: 
+                android: {
+                    icon: 'notification',
+                    sound: true,
+                    vibrate: true
+                },
+                ios: {
+                    alert: true,
+                    badge: true,
+                    sound: true
+                }
+            });
+
+            push.on('registration', (data) => {
+                console.log('Push registration ID:', data.registrationId);
+                Storage.save('push_token', data.registrationId);
+            });
+
+            push.on('notification', (data) => {
+                console.log('Notification received:', data);
+                this.showAlert(data.title, data.message);
+                this.loadIncidents();
+            });
+
+            push.on('error', (e) => {
+                console.error('Push error:', e);
+            });
+        } catch (error) {
+            console.error('Error initializing push notifications:', error);
+        }
+    },
+
+    // Handle back button
+    onBackButton: function(e) {
+        e.preventDefault();
+
+        const addModal = document.getElementById('add-incident-modal');
+        const detailModal = document.getElementById('incident-detail-modal');
+        const menu = document.getElementById('side-menu');
+
+        if (addModal.classList.contains('active')) {
+            this.hideAddIncidentModal();
+        } else if (detailModal.classList.contains('active')) {
+            this.hideIncidentDetail();
+        } else if (menu.classList.contains('open')) {
+            this.toggleMenu();
+        } else if (typeof navigator !== 'undefined' && navigator.app) {
+            navigator.app.exitApp();
+        }
+    }
+};
+
+// Initialize app when script loads
+console.log('App script loaded, calling App.init()');
+App.init();
