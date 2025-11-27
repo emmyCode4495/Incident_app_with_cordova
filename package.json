@@ -38,12 +38,7 @@
       "cordova-plugin-whitelist": {},
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-dialogs": {},
-      "cordova-plugin-splashscreen": {},
-      "cordova-support-google-services": {},
-      "cordova-plugin-firebasex": {
-        "ANDROID_FIREBASE_BOM_VERSION": "33.5.1",
-        "ANDROID_GOOGLE_SERVICES_VERSION": "4.4.2"
-      }
+      "cordova-plugin-splashscreen": {}
     },
     "platforms": [
       "android"
@@ -51,8 +46,6 @@
   },
   "devDependencies": {
     "cordova-android": "^14.0.1",
-    "cordova-plugin-firebasex": "^19.0.1",
-    "cordova-support-google-services": "~1.3.1",
     "phonegap-plugin-multidex": "~1.0.0"
   }
 }
